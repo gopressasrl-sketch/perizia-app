@@ -17,10 +17,14 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Accept Android Licenses (Forced)
+      - name: Pre-configure Flutter
         run: |
-          # Questo è il comando specifico che sblocca tutto
-          yes | flutter doctor --android-licenses
+          flutter config --no-analytics
+          flutter doctor
+
+      - name: Accept Android Licenses
+        run: |
+          yes | flutter doctor --android-licenses || true
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,12 +33,15 @@ jobs:
 
       - name: Install Flet and Dependencies
         run: |
-          pip install flet google-generativeai fpdf2 python-dotenv opencv-python-headless
+          pip install flet
+          # Installiamo le librerie. Se hai rinominato il file in requirements.txt bene, 
+          # altrimenti le installiamo manualmente per sicurezza:
+          pip install google-generativeai fpdf2 python-dotenv opencv-python-headless
 
-      - name: Build APK
+      - name: Build APK (Forced Yes)
         run: |
-          # Ora Flet troverà le licenze già accettate
-          flet build apk
+          # Usiamo printf per inviare 'y' e 'invio' in modo più robusto
+          printf 'y\n' | flet build apk --verbose
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
