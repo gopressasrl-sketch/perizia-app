@@ -1,73 +1,40 @@
-import flet as ft
-import os, json, asyncio
-import google.generativeai as genai
-from datetime import datetime
+name: Build APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-# CONFIGURAZIONE (Metti la tua chiave qui)
-GEMINI_KEY = "LA_TUA_CHIAVE_QUI"
-genai.configure(api_key=GEMINI_KEY)
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-async def main(page: ft.Page):
-    page.title = "GSSA PRO"
-    page.theme_mode = ft.ThemeMode.DARK
-    page.padding = 20
-    
-    targa_input = ft.TextField(label="Targa Veicolo", border_color="blue", text_align="center")
-    progress_ring = ft.ProgressRing(visible=False)
-    status_text = ft.Text("", text_align="center")
-    result_text = ft.Markdown("")
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
 
-    async def elabora_video(e: ft.FilePickerResultEvent):
-        if not e.files or not targa_input.value:
-            return
+      - name: Accept Android Licenses
+        run: yes | flutter doctor --android-licenses || true
 
-        progress_ring.visible = True
-        status_text.value = "Caricamento e analisi video in corso..."
-        page.update()
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-        try:
-            video_path = e.files[0].path
-            
-            # Carichiamo il video direttamente su Google Gemini
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            
-            # Caricamento del file (Gemini estrae i frame dai suoi server)
-            video_file = await asyncio.to_thread(genai.upload_file, path=video_path)
-            
-            prompt = f"Analizza questo video del veicolo targa {targa_input.value}. Elenca eventuali danni visivi sulla carrozzeria."
-            
-            # Aspettiamo l'analisi
-            response = await asyncio.to_thread(model.generate_content, [prompt, video_file])
-            
-            result_text.value = response.text
-            status_text.value = "✅ Analisi Completata"
-            
-            # Pulizia: eliminiamo il file dai server Google dopo l'uso
-            genai.delete_file(video_file.name)
+      - name: Install Dependencies
+        run: |
+          pip install flet google-generativeai python-dotenv
 
-        except Exception as ex:
-            status_text.value = f"❌ Errore: {str(ex)}"
-        
-        progress_ring.visible = False
-        page.update()
+      - name: Build APK
+        run: |
+          printf 'y\n' | flet build apk
 
-    file_picker = ft.FilePicker(on_result=elabora_video)
-    page.overlay.append(file_picker)
-
-    page.add(
-        ft.Column([
-            ft.Text("GSSA PRO", size=30, weight="bold", color="blue"),
-            ft.Divider(),
-            targa_input,
-            ft.ElevatedButton(
-                "CARICA VIDEO E ANALIZZA", 
-                icon=ft.icons.VIDEOCAM,
-                on_click=lambda _: file_picker.pick_files(file_type=ft.FilePickerFileType.VIDEO)
-            ),
-            progress_ring,
-            status_text,
-            ft.Container(result_text, padding=10, bgcolor="#222222", border_radius=10)
-        ], horizontal_alignment=ft.CrossAxisAlignment.CENTER)
-    )
-
-ft.app(target=main)
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GSSA-App-Funzionante
+          path: build/apk/*.apk
