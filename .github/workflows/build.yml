@@ -17,23 +17,26 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Accept Android Licenses
+        run: |
+          # Questo comando accetta tutte le licenze Android automaticamente
+          yes | sdkmanager --licenses || true
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install Flet
+      - name: Install Flet and Dependencies
         run: |
           pip install flet
-
-      - name: Install Dependencies
-        run: |
+          # Installiamo anche le librerie necessarie
           pip install google-generativeai fpdf2 python-dotenv opencv-python-headless
-        
+
       - name: Build APK
         run: |
-          # Il comando 'yes |' risponde automaticamente 'y' a tutte le domande
-          yes | flet build apk
+          # Usiamo 'yes' per confermare eventuali altre domande di Flet
+          yes | flet build apk --verbose
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
