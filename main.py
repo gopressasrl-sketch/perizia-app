@@ -17,7 +17,8 @@ async def main(page: ft.Page):
     risultato = ft.Markdown("")
     loading = ft.ProgressRing(visible=False)
 
-    async def al_risultato_file(e: ft.FilePickerResultEvent):
+    # --- MODIFICA QUI: rimosso 'ft.FilePickerResultEvent' che causava l'errore ---
+    async def al_risultato_file(e):
         if not e.files:
             return
         
@@ -26,7 +27,6 @@ async def main(page: ft.Page):
         page.update()
 
         try:
-            # Lettura video dai bytes (per il Web)
             video_bytes = e.files[0].content
             video_64 = base64.b64encode(video_bytes).decode("utf-8")
 
@@ -47,7 +47,7 @@ async def main(page: ft.Page):
                 risultato.value = dati['candidates'][0]['content']['parts'][0]['text']
                 status.value = "✅ Analisi Completata"
             else:
-                status.value = f"❌ Errore API Google: {res.status_code}"
+                status.value = f"❌ Errore API: {res.status_code}"
                 risultato.value = res.text
 
         except Exception as err:
@@ -57,8 +57,7 @@ async def main(page: ft.Page):
         loading.visible = False
         page.update()
 
-    # --- CORREZIONE FILEPICKER ---
-    # Definiamo il selettore e lo aggiungiamo all'overlay PRIMA di usarlo
+    # Inizializzazione pulita
     selettore = ft.FilePicker(on_result=al_risultato_file)
     page.overlay.append(selettore)
 
@@ -69,16 +68,15 @@ async def main(page: ft.Page):
         targa,
         ft.ElevatedButton(
             "CARICA VIDEO PERIZIA", 
-            # --- CORREZIONE ERRORE ICONA ---
-            # VIDEO_CAMERA_FRONT non esiste, usiamo VIDEOCAM
-            icon=ft.icons.VIDEOCAM, 
+            icon=ft.icons.VIDEOCAM, # Icona sicura
             on_click=lambda _: selettore.pick_files(file_type=ft.FilePickerFileType.VIDEO)
         ),
         loading,
         status,
         ft.Container(risultato, padding=15, bgcolor="#1A1A1A", border_radius=10)
     )
+    page.update()
 
-# --- CORREZIONE DEPRECATION WARNING ---
+# Avvio universale
 if __name__ == "__main__":
-    ft.app(main) # Rimosso target= per seguire le nuove linee guida
+    ft.app(main)
