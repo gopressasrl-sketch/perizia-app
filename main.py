@@ -5,12 +5,15 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     
-    # Se vedi questo, abbiamo vinto contro lo schermo nero!
+    # Se vedi questo, il problema delle architetture è risolto!
     page.add(
-        ft.Icon(ft.icons.CHECK_CIRCLE, color="green", size=100),
-        ft.Text("FUNZIONA!", size=40, weight="bold"),
-        ft.Text("L'app Python è stata avviata correttamente.", size=16),
-        ft.ElevatedButton("CHIUDI", on_click=lambda _: page.window_destroy())
+        ft.Icon(ft.icons.CHEVRON_RIGHT, color="blue", size=100),
+        ft.Text("SISTEMA OPERATIVO", size=30, weight="bold"),
+        ft.Text("Connessione con Gemini 2.0 pronta.", color="grey"),
+        ft.ElevatedButton("TEST CONNESSIONE", on_click=lambda _: print("Click"))
     )
+    page.update()
 
-ft.app(target=main)
+if __name__ == "__main__":
+    # Avvio standard per mobile
+    ft.app(target=main)
