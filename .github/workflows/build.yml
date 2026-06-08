@@ -1,5 +1,6 @@
 name: Build APK
 on: [push]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,14 +28,15 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install flet google-generativeai python-dotenv
+          pip install flet httpx python-dotenv
 
       - name: Build APK
         run: |
-          printf 'y\n' | flet build apk
+          # Compila l'APK aggiungendo i permessi necessari per Internet e File
+          printf '\n' | flet build apk --permissions INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GSSA-App-Funzionante
+          name: gssa-pro-app
           path: build/apk/*.apk
