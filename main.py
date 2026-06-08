@@ -4,8 +4,8 @@ import base64
 import asyncio
 
 # --- CONFIGURAZIONE ---
-# Metti qui la tua chiave API (quella che inizia con AIza...)
-API_KEY = "INSERISCI_QUI_LA_TUA_CHIAVE" 
+# Incolla qui la tua chiave API (AIza...)
+API_KEY = "AQ.Ab8RN6LE982d9nnz62nIfIwmvCiySMUaBwfa7BtoDDkpOqnfgg" 
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={API_KEY}"
 
 async def main(page: ft.Page):
@@ -19,7 +19,7 @@ async def main(page: ft.Page):
     risultato = ft.Markdown("")
     loading = ft.ProgressRing(visible=False)
 
-    # Gestore del caricamento video (SENZA TIPI DI EVENTO PER EVITARE CRASH)
+    # Funzione che analizza il video
     async def al_risultato_file(e):
         if not e.files:
             return
@@ -29,20 +29,20 @@ async def main(page: ft.Page):
         page.update()
 
         try:
-            # Lettura video
+            # Lettura video dai bytes (metodo specifico per il Web)
             video_bytes = e.files[0].content
             video_64 = base64.b64encode(video_bytes).decode("utf-8")
 
             corpo_richiesta = {
                 "contents": [{
                     "parts": [
-                        {"text": f"Analizza danni targa {targa.value}"},
+                        {"text": f"Analizza danni carrozzeria targa {targa.value}"},
                         {"inline_data": {"mime_type": "video/mp4", "data": video_64}}
                     ]
                 }]
             }
 
-            async with httpx.AsyncClient(timeout=120.0) as client:
+            async with httpx.AsyncClient(timeout=180.0) as client:
                 res = await client.post(URL, json=corpo_richiesta)
             
             if res.status_code == 200:
@@ -50,7 +50,7 @@ async def main(page: ft.Page):
                 risultato.value = dati['candidates'][0]['content']['parts'][0]['text']
                 status.value = "✅ Analisi Completata"
             else:
-                status.value = f"❌ Errore API: {res.status_code}"
+                status.value = f"❌ Errore API Google: {res.status_code}"
                 risultato.value = res.text
 
         except Exception as err:
@@ -60,14 +60,15 @@ async def main(page: ft.Page):
         loading.visible = False
         page.update()
 
-    # Creazione FilePicker
-    selettore = ft.FilePicker(on_result=al_risultato_file)
+    # --- CORREZIONE ERRORE ---
+    # Creiamo il selettore vuoto e aggiungiamo la funzione DOPO
+    selettore = ft.FilePicker()
+    selettore.on_result = al_risultato_file
     page.overlay.append(selettore)
 
-    # UI dell'app
     page.add(
         ft.Text("GSSA PRO", size=35, weight="bold", color="blue"),
-        ft.Text("Ispezione Veicoli AI", size=15, italic=True),
+        ft.Text("Powered by Gemini 2.0 Flash", size=12, italic=True),
         ft.Divider(),
         targa,
         ft.ElevatedButton(
@@ -77,9 +78,9 @@ async def main(page: ft.Page):
         ),
         loading,
         status,
-        ft.Container(risultato, padding=10, bgcolor="#1A1A1A", border_radius=10)
+        ft.Container(risultato, padding=15, bgcolor="#1A1A1A", border_radius=10)
     )
 
-# Avvio corretto per il Web
+# Avvio corretto (risolve anche il DeprecationWarning del log)
 if __name__ == "__main__":
-    ft.app(main)
+    ft.app(target=main)
