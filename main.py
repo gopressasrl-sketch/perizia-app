@@ -6,7 +6,7 @@ import os
 
 # --- CONFIGURAZIONE ---
 # Inserisci qui la tua chiave API (deve iniziare con AIza...)
-GEMINI_KEY = "IL_TUO_API_KEY_QUI" 
+GEMINI_KEY = "AQ.Ab8RN6KQaP84VAzm3m1kcEwFRKRxAy6fo8YSdolx9mHb_Rbu3Q" 
 
 # URL aggiornato per usare il modello Gemini 2.0 Flash
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
