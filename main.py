@@ -1,19 +1,25 @@
 import flet as ft
+import time
 
 def main(page: ft.Page):
+    # Configurazioni base
+    page.title = "GSSA PRO"
     page.theme_mode = ft.ThemeMode.DARK
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    
-    # Se vedi questo, il problema delle architetture è risolto!
+
+    # Se vedi questo, l'app Python è ufficialmente VIVA
+    messaggio = ft.Text("GSSA PRO CARICATO", size=30, weight="bold", color="green")
+    bottone_test = ft.ElevatedButton("CLICCA QUI PER TEST", on_click=lambda _: print("OK"))
+
     page.add(
-        ft.Icon(ft.icons.CHEVRON_RIGHT, color="blue", size=100),
-        ft.Text("SISTEMA OPERATIVO", size=30, weight="bold"),
-        ft.Text("Connessione con Gemini 2.0 pronta.", color="grey"),
-        ft.ElevatedButton("TEST CONNESSIONE", on_click=lambda _: print("Click"))
+        ft.Icon(ft.icons.BOLT, color="yellow", size=100),
+        messaggio,
+        bottone_test,
+        ft.Text("Se vedi questa schermata, l'errore nero è sparito.", size=12, color="grey")
     )
     page.update()
 
+# Avvio senza 'async' per massima compatibilità
 if __name__ == "__main__":
-    # Avvio standard per mobile
     ft.app(target=main)
