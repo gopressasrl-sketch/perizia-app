@@ -1,3 +1,2 @@
 flet
-google-generativeai
-python-dotenv
+httpx
