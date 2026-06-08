@@ -13,6 +13,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -23,8 +34,9 @@ jobs:
 
       - name: Build Web App
         run: |
-          # Sostituisci /perizia-app/ con il nome esatto del tuo repository se è diverso
-          flet build web --base-url /perizia-app/
+          # Usiamo 'yes |' per accettare automaticamente l'installazione di Flutter
+          # IMPORTANTE: Assicurati che /perizia-app/ sia il nome esatto del tuo repository
+          yes | flet build web --base-url /perizia-app/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
