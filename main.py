@@ -17,13 +17,12 @@ async def main(page: ft.Page):
     risultato = ft.Markdown("")
     loading = ft.ProgressRing(visible=False)
 
-    # --- MODIFICA QUI: rimosso 'ft.FilePickerResultEvent' che causava l'errore ---
     async def al_risultato_file(e):
         if not e.files:
             return
         
         loading.visible = True
-        status.value = "⏳ Analisi Gemini 2.0 in corso..."
+        status.value = "⏳ Analisi in corso..."
         page.update()
 
         try:
@@ -47,7 +46,7 @@ async def main(page: ft.Page):
                 risultato.value = dati['candidates'][0]['content']['parts'][0]['text']
                 status.value = "✅ Analisi Completata"
             else:
-                status.value = f"❌ Errore API: {res.status_code}"
+                status.value = f"❌ Errore: {res.status_code}"
                 risultato.value = res.text
 
         except Exception as err:
@@ -57,18 +56,20 @@ async def main(page: ft.Page):
         loading.visible = False
         page.update()
 
-    # Inizializzazione pulita
-    selettore = ft.FilePicker(on_result=al_risultato_file)
+    # --- SOLUZIONE AL TYPEERROR ---
+    # Non passiamo nulla nel costruttore ()
+    selettore = ft.FilePicker()
+    # Assegniamo la funzione dopo la creazione
+    selettore.on_result = al_risultato_file
     page.overlay.append(selettore)
 
     page.add(
         ft.Text("GSSA PRO", size=35, weight="bold", color="blue"),
-        ft.Text("Powered by Gemini 2.0 Flash", size=12, italic=True),
         ft.Divider(),
         targa,
         ft.ElevatedButton(
             "CARICA VIDEO PERIZIA", 
-            icon=ft.icons.VIDEOCAM, # Icona sicura
+            icon="videocam", # Uso stringa invece di ft.icons per sicurezza
             on_click=lambda _: selettore.pick_files(file_type=ft.FilePickerFileType.VIDEO)
         ),
         loading,
@@ -77,6 +78,7 @@ async def main(page: ft.Page):
     )
     page.update()
 
-# Avvio universale
+# --- SOLUZIONE AL DEPRECATION WARNING ---
 if __name__ == "__main__":
-    ft.app(main)
+    # Proviamo a usare ft.app(target=main) che è il più universale
+    ft.app(target=main)
