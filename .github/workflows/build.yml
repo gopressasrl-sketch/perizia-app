@@ -17,16 +17,15 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Flet
-        run: pip install flet httpx
+      - name: Install Dependencies
+        run: pip install flet
 
       - name: Build APK
         run: |
-          # Usiamo il comando base, senza permessi che lo rompono
           printf '\n' | flet build apk
 
-      - name: Upload
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: gssa-app
+          name: gssa-test
           path: build/apk/*.apk
