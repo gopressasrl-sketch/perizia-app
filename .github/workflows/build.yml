@@ -6,37 +6,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-
-      - name: Accept Android Licenses
-        run: yes | flutter doctor --android-licenses || true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
-        run: |
-          pip install flet httpx
+      - name: Install Flet
+        run: pip install flet httpx
 
       - name: Build APK
         run: |
-          # Flet compila l'APK senza i permessi aggiuntivi che davano errore
+          # Usiamo il comando base, senza permessi che lo rompono
           printf '\n' | flet build apk
 
-      - name: Upload APK
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: gssa-pro-app
+          name: gssa-app
           path: build/apk/*.apk
