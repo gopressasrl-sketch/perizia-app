@@ -1,5 +1,3 @@
 flet
 google-generativeai
-opencv-python-headless
-fpdf2
 python-dotenv
