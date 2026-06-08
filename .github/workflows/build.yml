@@ -32,8 +32,8 @@ jobs:
 
       - name: Build APK
         run: |
-          # Compila l'APK aggiungendo i permessi necessari per Internet e File
-          printf '\n' | flet build apk --permissions INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
+          # Ho tolto i permessi che davano errore, Flet mette quelli base da solo
+          printf '\n' | flet build apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
