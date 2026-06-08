@@ -1,33 +1,17 @@
 import flet as ft
-import os, cv2, json, asyncio
+import os, json, asyncio
 import google.generativeai as genai
 from datetime import datetime
-from fpdf import FPDF
 
-# Inizializzazione AI
-GEMINI_KEY = "AQ.Ab8RN6KQaP84VAzm3m1kcEwFRKRxAy6fo8YSdolx9mHb_Rbu3Q" 
-genai.configure(api_key=GEMINI_KEY, transport='rest')
-
-def estrai_frames(video_path):
-    frames = []
-    cap = cv2.VideoCapture(video_path)
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    step = max(1, total // 20) # 20 frame sono sufficienti e più leggeri per l'app
-    for i in range(20):
-        cap.set(cv2.CAP_PROP_POS_FRAMES, i * step)
-        ret, frame = cap.read()
-        if not ret: break
-        _, buff = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
-        frames.append({"mime_type": "image/jpeg", "data": buff.tobytes()})
-    cap.release()
-    return frames
+# CONFIGURAZIONE (Metti la tua chiave qui)
+GEMINI_KEY = "AQ.Ab8RN6KQaP84VAzm3m1kcEwFRKRxAy6fo8YSdolx9mHb_Rbu3Q"
+genai.configure(api_key=GEMINI_KEY)
 
 async def main(page: ft.Page):
     page.title = "GSSA PRO"
     page.theme_mode = ft.ThemeMode.DARK
     page.padding = 20
     
-    # UI Elements
     targa_input = ft.TextField(label="Targa Veicolo", border_color="blue", text_align="center")
     progress_ring = ft.ProgressRing(visible=False)
     status_text = ft.Text("", text_align="center")
@@ -35,26 +19,32 @@ async def main(page: ft.Page):
 
     async def elabora_video(e: ft.FilePickerResultEvent):
         if not e.files or not targa_input.value:
-            page.snack_bar = ft.SnackBar(ft.Text("Inserisci targa e seleziona un video!"))
-            page.snack_bar.open = True
-            page.update()
             return
 
         progress_ring.visible = True
-        status_text.value = "Analisi in corso... attendi."
+        status_text.value = "Caricamento e analisi video in corso..."
         page.update()
 
         try:
             video_path = e.files[0].path
-            immagini = await asyncio.to_thread(estrai_frames, video_path)
             
+            # Carichiamo il video direttamente su Google Gemini
             model = genai.GenerativeModel("gemini-1.5-flash")
-            prompt = f"Analizza danni veicolo targa {targa_input.value}. Sii professionale e sintetico."
             
-            response = await asyncio.to_thread(model.generate_content, [prompt] + immagini)
+            # Caricamento del file (Gemini estrae i frame dai suoi server)
+            video_file = await asyncio.to_thread(genai.upload_file, path=video_path)
+            
+            prompt = f"Analizza questo video del veicolo targa {targa_input.value}. Elenca eventuali danni visivi sulla carrozzeria."
+            
+            # Aspettiamo l'analisi
+            response = await asyncio.to_thread(model.generate_content, [prompt, video_file])
             
             result_text.value = response.text
             status_text.value = "✅ Analisi Completata"
+            
+            # Pulizia: eliminiamo il file dai server Google dopo l'uso
+            genai.delete_file(video_file.name)
+
         except Exception as ex:
             status_text.value = f"❌ Errore: {str(ex)}"
         
@@ -64,18 +54,15 @@ async def main(page: ft.Page):
     file_picker = ft.FilePicker(on_result=elabora_video)
     page.overlay.append(file_picker)
 
-    # Layout Home
     page.add(
         ft.Column([
             ft.Text("GSSA PRO", size=30, weight="bold", color="blue"),
-            ft.Text("Ispezione AI Veicoli", size=16),
             ft.Divider(),
             targa_input,
             ft.ElevatedButton(
-                "SELEZIONA VIDEO", 
-                icon=ft.icons.VIDEO_FILE,
-                on_click=lambda _: file_picker.pick_files(file_type=ft.FilePickerFileType.VIDEO),
-                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10))
+                "CARICA VIDEO E ANALIZZA", 
+                icon=ft.icons.VIDEOCAM,
+                on_click=lambda _: file_picker.pick_files(file_type=ft.FilePickerFileType.VIDEO)
             ),
             progress_ring,
             status_text,
