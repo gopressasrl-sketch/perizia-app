@@ -4,11 +4,12 @@ import base64
 import asyncio
 
 # --- CONFIGURAZIONE ---
-GEMINI_KEY = "AQ.Ab8RN6LE982d9nnz62nIfIwmvCiySMUaBwfa7BtoDDkpOqnfgg" 
+# Incolla qui la tua chiave API (AIza...)
+GEMINI_KEY = "INSERISCI_QUI_LA_TUA_CHIAVE" 
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
 
 async def main(page: ft.Page):
-    page.title = "GSSA PRO - Web"
+    page.title = "GSSA PRO - Gemini 2.0"
     page.theme_mode = ft.ThemeMode.DARK
     page.scroll = ft.ScrollMode.ADAPTIVE
     page.padding = 20
@@ -18,23 +19,18 @@ async def main(page: ft.Page):
     status_text = ft.Text("", text_align="center")
     result_text = ft.Markdown("")
 
-    async def elabora_video(e: ft.FilePickerResultEvent):
-        if not e.files: return
+    # HO RIMOSSO 'ft.FilePickerResultEvent' -> ora non crasha più!
+    async def elabora_video(e):
+        if not e.files:
+            return
         
         progress_ring.visible = True
         status_text.value = "⏳ Analisi Gemini 2.0 Flash in corso..."
         page.update()
 
         try:
-            # Per il web usiamo il contenuto in memoria del file
+            # Per il web leggiamo il file direttamente dai bytes
             video_bytes = e.files[0].content
-            if not video_bytes:
-                # Se il browser non legge i bytes direttamente, usiamo un metodo alternativo (per sicurezza)
-                status_text.value = "⚠️ Caricamento file non riuscito. Riprova."
-                progress_ring.visible = False
-                page.update()
-                return
-
             video_data = base64.b64encode(video_bytes).decode("utf-8")
 
             payload = {
@@ -54,11 +50,11 @@ async def main(page: ft.Page):
                 result_text.value = res['candidates'][0]['content']['parts'][0]['text']
                 status_text.value = "✅ Analisi Completata"
             else:
-                status_text.value = f"❌ Errore: {response.status_code}"
+                status_text.value = f"❌ Errore Google: {response.status_code}"
                 result_text.value = response.text
 
         except Exception as ex:
-            status_text.value = "❌ Errore durante l'elaborazione"
+            status_text.value = "❌ Errore"
             result_text.value = str(ex)
         
         progress_ring.visible = False
@@ -70,7 +66,7 @@ async def main(page: ft.Page):
     page.add(
         ft.Column([
             ft.Text("GSSA PRO", size=30, weight="bold", color="blue"),
-            ft.Text("Web Perizia AI", size=12, italic=True),
+            ft.Text("Powered by Gemini 2.0 Flash", size=12, italic=True),
             ft.Divider(),
             targa_input,
             ft.ElevatedButton(
@@ -84,4 +80,6 @@ async def main(page: ft.Page):
         ], horizontal_alignment=ft.CrossAxisAlignment.CENTER)
     )
 
-ft.app(target=main)
+# Avviamo l'app
+if __name__ == "__main__":
+    ft.app(target=main)
